@@ -4,6 +4,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"golang-crowdfunding-api/auth"
+	"golang-crowdfunding-api/campaign"
 	"golang-crowdfunding-api/handler"
 	"golang-crowdfunding-api/helper"
 	"golang-crowdfunding-api/user"
@@ -25,12 +26,18 @@ func main() {
 	authService := auth.NewJwtService()
 	userHandler := handler.NewUserHandler(userService, authService)
 
+	campaignRepository := campaign.NewRepository(db)
+	campaignService := campaign.NewService(campaignRepository)
+	campaignHandler := handler.NewCampaignHandler(campaignService)
+
 	router := gin.Default()
 	api := router.Group("/api/v1")
 	api.POST("/users", userHandler.RegisterUser)
 	api.POST("/login", userHandler.Login)
 	api.POST("/email_checkers", userHandler.CheckEmailAvailability)
 	api.POST("/avatars", authMiddleware(authService, userService), userHandler.UploadAvatar)
+
+	api.GET("/campaigns", campaignHandler.GetCampaign)
 
 	err = router.Run(":8081")
 	if err != nil {
