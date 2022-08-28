@@ -39,7 +39,8 @@ func main() {
 	api.POST("/email_checkers", userHandler.CheckEmailAvailability)
 	api.POST("/avatars", authMiddleware(authService, userService), userHandler.UploadAvatar)
 
-	api.GET("/campaigns", campaignHandler.GetCampaign)
+	api.GET("/campaigns", campaignHandler.GetCampaigns)
+	api.GET("/campaigns/:campaign_id", campaignHandler.GetCampaign)
 
 	err = router.Run(":8081")
 	if err != nil {
