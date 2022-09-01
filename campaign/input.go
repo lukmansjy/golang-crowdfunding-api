@@ -2,7 +2,7 @@ package campaign
 
 import "golang-crowdfunding-api/user"
 
-type CreateCampaignInput struct {
+type InputCampaign struct {
 	Name             string `json:"name" binding:"required"`
 	ShortDescription string `json:"short_description" binding:"required"`
 	Description      string `json:"description" binding:"required"`
