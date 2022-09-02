@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gosimple/slug"
+	"golang-crowdfunding-api/user"
 	"time"
 )
 
@@ -12,6 +13,7 @@ type Service interface {
 	GetCampaignsById(CampaignID int) (Campaign, error)
 	CreateCampaign(input InputCampaign) (Campaign, error)
 	UpdateCampaign(campaignId int, input InputCampaign) (Campaign, error)
+	InsertImage(input InputImage, fileLocation string, currentUser user.User) (CampaignImage, error)
 }
 
 type service struct {
@@ -68,4 +70,33 @@ func (s *service) UpdateCampaign(campaignId int, input InputCampaign) (Campaign,
 	campaign.GoalAmount = input.GoalAmount
 
 	return s.repository.Update(campaign)
+}
+
+func (s *service) InsertImage(input InputImage, fileLocation string, currentUser user.User) (CampaignImage, error) {
+	campaign, err := s.repository.FindById(input.CampaignID)
+	if err != nil {
+		return CampaignImage{}, err
+	}
+
+	if campaign.User.ID != currentUser.ID {
+		return CampaignImage{}, errors.New("not an owner of the campaign")
+	}
+
+	isPrimary := 0
+	if input.IsPrimary {
+		isPrimary = 1
+		_, err := s.repository.MarkAllImageNotPrimary(input.CampaignID)
+		if err != nil {
+			return CampaignImage{}, err
+		}
+	}
+
+	campaignImage := CampaignImage{
+		CampaignID: input.CampaignID,
+		FileName:   fileLocation,
+		IsPrimary:  isPrimary,
+	}
+
+	newCampaignImage, err := s.repository.SaveImage(campaignImage)
+	return newCampaignImage, err
 }
