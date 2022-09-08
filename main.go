@@ -7,6 +7,7 @@ import (
 	"golang-crowdfunding-api/campaign"
 	"golang-crowdfunding-api/handler"
 	"golang-crowdfunding-api/helper"
+	"golang-crowdfunding-api/transaction"
 	"golang-crowdfunding-api/user"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -30,6 +31,10 @@ func main() {
 	campaignService := campaign.NewService(campaignRepository)
 	campaignHandler := handler.NewCampaignHandler(campaignService)
 
+	transactionRepository := transaction.NewRepository(db)
+	transactionService := transaction.NewService(transactionRepository)
+	transactionHandler := handler.NewTransactionHandler(transactionService)
+
 	router := gin.Default()
 	router.Static("/images", "./images")
 
@@ -44,6 +49,9 @@ func main() {
 	api.POST("/campaigns", authMiddleware(authService, userService), campaignHandler.CreateCampaign)
 	api.PUT("/campaigns/:campaign_id", authMiddleware(authService, userService), campaignHandler.UpdateCampaign)
 	api.POST("/campaign-images", authMiddleware(authService, userService), campaignHandler.UploadImage)
+
+	api.GET("campaigns/:campaign_id/transactions/", authMiddleware(authService, userService), transactionHandler.GetTransactionsByCampaignID)
+	api.GET("transactions/", authMiddleware(authService, userService), transactionHandler.GetUserTransactions)
 
 	err = router.Run(":8081")
 	if err != nil {
